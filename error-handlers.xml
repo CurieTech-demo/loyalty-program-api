@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" 
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd
+		http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+	<!-- Global Error Handler -->
+	<error-handler name="global-error-handler" doc:name="Global Error Handler" doc:id="92e7bfc9-2ac2-47d4-aa41-1ea2118f230c">
+		
+		<!-- APIkit Bad Request (400) -->
+		<on-error-propagate type="APIKIT:BAD_REQUEST" doc:name="On Bad Request" doc:id="c84b828c-1139-46d0-89cc-76ce3c02472a">
+			<logger level="WARN" message="Bad request: #[error.description]" doc:name="Log Bad Request" doc:id="860e89c9-7cc5-4eca-a877-0fff2fa0022c"/>
+			<ee:transform doc:name="Build 400 Response" doc:id="ca98d096-fc06-42fe-8a23-f5c8cb9f246a">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: "BAD_REQUEST",
+	message: error.description default "Invalid request data",
+	timestamp: now()
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</on-error-propagate>
+		
+		<!-- APIkit Not Found (404) -->
+		<on-error-propagate type="APIKIT:NOT_FOUND" doc:name="On Not Found" doc:id="310df3f2-00fc-405e-9390-a9ce100a31b4">
+			<logger level="WARN" message="Resource not found: #[error.description]" doc:name="Log Not Found" doc:id="e2b6b14a-253d-4959-b908-2f975399a123"/>
+			<ee:transform doc:name="Build 404 Response" doc:id="1380fd94-bf53-4c59-ae3a-d30bca927ffb">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: "NOT_FOUND",
+	message: "Resource not found",
+	timestamp: now()
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[404]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</on-error-propagate>
+		
+		<!-- APIkit Method Not Allowed (405) -->
+		<on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED" doc:name="On Method Not Allowed" doc:id="2e5430f3-3f97-472b-89a6-a00890c90f37">
+			<logger level="WARN" message="Method not allowed: #[error.description]" doc:name="Log Method Not Allowed" doc:id="0edf61bc-8aaf-4102-bbf0-1612c1f5eae2"/>
+			<ee:transform doc:name="Build 405 Response" doc:id="daa05877-cb14-4dd7-a8fb-1118cd34fa6f">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: "METHOD_NOT_ALLOWED",
+	message: "Method not allowed",
+	timestamp: now()
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[405]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</on-error-propagate>
+		
+		<!-- APIkit Not Acceptable (406) -->
+		<on-error-propagate type="APIKIT:NOT_ACCEPTABLE" doc:name="On Not Acceptable" doc:id="d60d0f99-7cc3-4341-8812-5ad5cd4ee83e">
+			<logger level="WARN" message="Not acceptable: #[error.description]" doc:name="Log Not Acceptable" doc:id="54f1e6ca-9641-47a1-b507-239dac456cca"/>
+			<ee:transform doc:name="Build 406 Response" doc:id="bb6fcaaf-711f-45e9-8eec-f21b91edb576">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: "NOT_ACCEPTABLE",
+	message: "Not acceptable",
+	timestamp: now()
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[406]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</on-error-propagate>
+		
+		<!-- APIkit Unsupported Media Type (415) -->
+		<on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE" doc:name="On Unsupported Media Type" doc:id="41cd9844-6019-4323-8877-991ff04d1daf">
+			<logger level="WARN" message="Unsupported media type: #[error.description]" doc:name="Log Unsupported Media" doc:id="fb48e59f-4491-4294-92f3-1315dff7a28b"/>
+			<ee:transform doc:name="Build 415 Response" doc:id="419233b2-31bc-4418-bb99-aabe2dd2c4f2">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: "UNSUPPORTED_MEDIA_TYPE",
+	message: "Unsupported media type",
+	timestamp: now()
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[415]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</on-error-propagate>
+		
+		<!-- APIkit Not Implemented (501) -->
+		<on-error-propagate type="APIKIT:NOT_IMPLEMENTED" doc:name="On Not Implemented" doc:id="4b9b735c-3479-4bbd-bf01-3a2f62057dde">
+			<logger level="WARN" message="Not implemented: #[error.description]" doc:name="Log Not Implemented" doc:id="2a753e37-ddfa-4c24-9861-66726a43f97f"/>
+			<ee:transform doc:name="Build 501 Response" doc:id="62b77bf5-edaf-4069-b26f-620d0b70383b">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: "NOT_IMPLEMENTED",
+	message: "Not implemented",
+	timestamp: now()
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[501]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</on-error-propagate>
+		
+		<!-- Any Other Error (500) -->
+		<on-error-propagate type="ANY" doc:name="On Any Error" doc:id="60c9e98e-ee8e-451d-a0b4-0ca40ffbfe60">
+			<logger level="ERROR" message="Unexpected error: #[error.description]" doc:name="Log Error" doc:id="568bb51c-9f3b-48df-a78f-597d4831bea1"/>
+			<ee:transform doc:name="Build 500 Response" doc:id="673ec974-cb93-4a97-bce2-09a3ef143cbb">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: "INTERNAL_ERROR",
+	message: "An unexpected error occurred",
+	timestamp: now()
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[500]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</on-error-propagate>
+		
+	</error-handler>
+
+</mule>

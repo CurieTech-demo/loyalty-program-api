@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" 
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+		http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+		http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd">
+
+	<!-- Configuration Properties -->
+	<configuration-properties file="config/config-${mule.env}.yaml" doc:name="Configuration properties" doc:id="106956c8-e8ae-4525-8c95-f9078934cfbd"/>
+	
+	<!-- Global Configuration -->
+	<global-property name="mule.env" value="dev" doc:name="Global Property" doc:id="72145255-559a-43ad-8fa5-02de377dae4e"/>
+	
+	<!-- HTTP Listener Configuration -->
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="74bcaf09-fd01-4654-accf-f9d3e6fe6d98">
+		<http:listener-connection host="${http.host}" port="${http.port}" />
+	</http:listener-config>
+	
+	<!-- Database Configuration for PostgreSQL -->
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="1a6c1cea-a6bb-49c8-bb1f-c4db4cf896d5">
+		<db:generic-connection 
+			url="jdbc:postgresql://${db.host}:${db.port}/${db.name}" 
+			driverClassName="org.postgresql.Driver" 
+			user="${db.user}" 
+			password="${db.password}">
+			<db:pooling-profile maxPoolSize="10" minPoolSize="2" acquireIncrement="1" />
+		</db:generic-connection>
+	</db:config>
+	
+	<!-- APIkit Configuration -->
+	<apikit:config name="loyalty-program-api-config" api="api/loyalty-program-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" doc:name="Router" doc:id="bad941be-339c-4e4e-83fb-0dcb09533587"/>
+
+</mule>

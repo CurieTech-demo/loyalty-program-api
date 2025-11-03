@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" 
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+		http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+		http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd
+		http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+	<!-- Main API Flow with HTTP Listener and APIkit Router -->
+	<flow name="loyalty-program-api-main">
+		<http:listener config-ref="HTTP_Listener_config" path="/api/loyalty/v1/*" doc:name="HTTP Listener" doc:id="35c77828-62d2-4a0f-98e6-f7b4f0ca6275">
+			<http:response statusCode="#[vars.httpStatus default 200]">
+				<http:headers>#[vars.outboundHeaders default {}]</http:headers>
+			</http:response>
+			<http:error-response statusCode="#[vars.httpStatus default 500]">
+				<http:headers>#[vars.outboundHeaders default {}]</http:headers>
+			</http:error-response>
+		</http:listener>
+		<logger level="INFO" message="Request received: #[attributes.method] #[attributes.requestPath]" doc:name="Log Request" doc:id="46b899ff-45d6-4224-a4ca-c3be5da4a557"/>
+		<apikit:router config-ref="loyalty-program-api-config" doc:name="APIkit Router" doc:id="f4de8925-9422-4f3f-8cc1-70d2baf7669a"/>
+		<error-handler ref="global-error-handler" />
+	</flow>
+	
+	<!-- POST /customers Implementation Flow -->
+	<flow name="post:\customers:application\json:loyalty-program-api-config">
+		<logger level="INFO" message="POST /customers endpoint invoked" doc:name="Log Endpoint" doc:id="9df45d23-f147-478c-9966-50a2b3f7c358"/>
+		<flow-ref name="enroll-customer-impl-flow" doc:name="Call Implementation Flow" doc:id="74d1222d-a9ce-453f-8087-a8f80e6effcb"/>
+	</flow>
+	
+	<!-- Customer Enrollment Implementation Flow -->
+	<flow name="enroll-customer-impl-flow">
+		<!-- Store original payload -->
+		<set-variable variableName="enrollmentRequest" value="#[payload]" doc:name="Store Request" doc:id="5204d760-22e9-4a3d-9ddc-6078e00ab4ad"/>
+		<logger level="INFO" message="Starting customer enrollment process for email: #[vars.enrollmentRequest.email]" doc:name="Log Start" doc:id="c7502b4c-bc2a-462b-aecc-1d431397178e"/>
+		
+		<!-- Check if customer already exists -->
+		<try doc:name="Try" doc:id="9ed67cfe-53ca-4c30-9184-d1404494ff27">
+			<db:select config-ref="Database_Config" doc:name="Check Existing Customer" doc:id="7dcb4414-ca65-4db3-9e13-815101241310">
+				<db:sql><![CDATA[SELECT customer_id, email FROM customers WHERE email = :email]]></db:sql>
+				<db:input-parameters><![CDATA[#[{
+	'email': vars.enrollmentRequest.email
+}]]]></db:input-parameters>
+			</db:select>
+			
+			<!-- Check if customer exists -->
+			<choice doc:name="Customer Exists?" doc:id="28a47ab5-d43b-42c7-a678-a1bf71a24bc5">
+				<when expression="#[sizeOf(payload) &gt; 0]">
+					<logger level="WARN" message="Customer already exists with email: #[payload[0].email]" doc:name="Log Duplicate" doc:id="aba3c4bd-c20e-4c1e-a5f8-f47c9cac3809"/>
+					<raise-error type="LOYALTY:CUSTOMER_EXISTS" description="Customer with this email already enrolled" doc:name="Raise Duplicate Error" doc:id="201b3da2-d129-4cab-9102-09f4a85afaae"/>
+				</when>
+				<otherwise>
+					<logger level="INFO" message="Customer does not exist, proceeding with enrollment" doc:name="Log New Customer" doc:id="8dbb971c-b9fa-4b2f-a2d2-e9099c0eedf1"/>
+				</otherwise>
+			</choice>
+			
+			<!-- Restore original payload -->
+			<set-payload value="#[vars.enrollmentRequest]" doc:name="Restore Payload" doc:id="95579b73-59f7-4d68-aa60-fa94ea9019da"/>
+			
+			<!-- Prepare customer data with generated ID and timestamp -->
+			<set-variable variableName="customerId" value="#['CUST-' ++ uuid()]" doc:name="Generate Customer ID" doc:id="9dcd2a05-c741-4ba0-8147-652862885d2a"/>
+			<set-variable variableName="enrollmentDate" value="#[now()]" doc:name="Set Enrollment Date" doc:id="0ac79dfa-44f1-45db-8f86-7ec9468cb57d"/>
+			<set-variable variableName="tier" value="Bronze" doc:name="Set Default Tier" doc:id="97a4bbe6-6f42-4fcb-9a81-f1972c61017b"/>
+			<set-variable variableName="totalPoints" value="#[0]" doc:name="Set Initial Points" doc:id="01030e34-6af6-4168-abc1-2886aad38323"/>
+			
+			<logger level="INFO" message="Generated Customer ID: #[vars.customerId], Tier: #[vars.tier]" doc:name="Log Generated Data" doc:id="f3507183-d04e-4d16-9176-6487d65be468"/>
+			
+			<!-- Insert new customer into database -->
+			<db:insert config-ref="Database_Config" doc:name="Insert Customer" doc:id="c53d8619-2b64-4edc-a0e0-b95fbf24a83f">
+				<db:sql><![CDATA[INSERT INTO customers (customer_id, first_name, last_name, email, phone, enrollment_date, tier, total_points)
+VALUES (:customerId, :firstName, :lastName, :email, :phone, :enrollmentDate, :tier, :totalPoints)]]></db:sql>
+				<db:input-parameters><![CDATA[#[{
+	'customerId': vars.customerId,
+	'firstName': payload.firstName,
+	'lastName': payload.lastName,
+	'email': payload.email,
+	'phone': payload.phone default null,
+	'enrollmentDate': vars.enrollmentDate,
+	'tier': vars.tier,
+	'totalPoints': vars.totalPoints
+}]]]></db:input-parameters>
+			</db:insert>
+			
+			<logger level="INFO" message="Customer successfully inserted into database: #[vars.customerId]" doc:name="Log Success" doc:id="328a29e5-cf1b-4e7a-b848-bcd5a87a57d4"/>
+			
+			<!-- Build success response -->
+			<ee:transform doc:name="Build Success Response" doc:id="d1424d4f-81ea-4afb-82da-d370428f9016">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	customerId: vars.customerId,
+	message: "Customer successfully enrolled in loyalty program",
+	tier: vars.tier,
+	enrollmentDate: vars.enrollmentDate
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[201]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			
+			<logger level="INFO" message="Customer enrollment completed successfully" doc:name="Log Completion" doc:id="6604a9f6-6903-4184-bb3a-903faea21099"/>
+			
+			<error-handler>
+				<on-error-propagate type="LOYALTY:CUSTOMER_EXISTS" doc:name="On Customer Exists" doc:id="b54b7644-bbbb-4847-bd14-84cc15985ed6">
+					<ee:transform doc:name="Build 409 Response" doc:id="b11d9e32-57f1-4644-9100-f31905bbc28f">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: "CONFLICT",
+	message: "Customer with this email already exists",
+	timestamp: now()
+}]]></ee:set-payload>
+						</ee:message>
+						<ee:variables>
+							<ee:set-variable variableName="httpStatus"><![CDATA[409]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+				</on-error-propagate>
+				
+				<on-error-propagate type="DB:CONNECTIVITY" doc:name="On DB Connectivity Error" doc:id="5a35dd21-ec25-4a10-9aba-fa2f5d4bd422">
+					<logger level="ERROR" message="Database connectivity error: #[error.description]" doc:name="Log DB Error" doc:id="4f9a3127-3f3e-4baf-932a-d79277e341d0"/>
+					<ee:transform doc:name="Build 500 Response" doc:id="7c8eb0a1-efa1-441c-ad24-1458d6863a84">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: "DATABASE_ERROR",
+	message: "Unable to connect to database",
+	timestamp: now()
+}]]></ee:set-payload>
+						</ee:message>
+						<ee:variables>
+							<ee:set-variable variableName="httpStatus"><![CDATA[500]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+				</on-error-propagate>
+				
+				<on-error-propagate type="DB:QUERY_EXECUTION" doc:name="On DB Query Error" doc:id="33c7e9ea-3d3e-4837-a485-97b2c30e67c4">
+					<logger level="ERROR" message="Database query error: #[error.description]" doc:name="Log Query Error" doc:id="cfa4a8c2-a6ed-43e2-8954-a05053942c45"/>
+					<ee:transform doc:name="Build 500 Response" doc:id="af256dc8-2a0b-4b75-b7ac-69192dfccc28">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: "DATABASE_ERROR",
+	message: "Database operation failed",
+	timestamp: now()
+}]]></ee:set-payload>
+						</ee:message>
+						<ee:variables>
+							<ee:set-variable variableName="httpStatus"><![CDATA[500]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+				</on-error-propagate>
+				
+				<on-error-propagate type="ANY" doc:name="On Any Error" doc:id="1c663d57-f2dd-4ec5-93c9-1e0b60dc1316">
+					<logger level="ERROR" message="Unexpected error: #[error.description]" doc:name="Log Unexpected Error" doc:id="720ff0ed-f303-4578-b0bb-d61cfaa928fb"/>
+					<ee:transform doc:name="Build 500 Response" doc:id="be34cae6-996d-40dc-858b-05ea0277f60c">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: "INTERNAL_ERROR",
+	message: "An unexpected error occurred",
+	timestamp: now()
+}]]></ee:set-payload>
+						</ee:message>
+						<ee:variables>
+							<ee:set-variable variableName="httpStatus"><![CDATA[500]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+	</flow>
+	
+	<!-- APIkit Console Flow -->
+	<flow name="loyalty-program-api-console">
+		<http:listener config-ref="HTTP_Listener_config" path="/console/*" doc:name="HTTP Listener" doc:id="fe084d73-793f-4fc1-b093-12ba5f72bf6a">
+			<http:response statusCode="#[vars.httpStatus default 200]">
+				<http:headers>#[vars.outboundHeaders default {}]</http:headers>
+			</http:response>
+			<http:error-response statusCode="#[vars.httpStatus default 500]">
+				<http:headers>#[vars.outboundHeaders default {}]</http:headers>
+			</http:error-response>
+		</http:listener>
+		<apikit:console config-ref="loyalty-program-api-config" doc:name="APIkit Console" doc:id="ef039d32-1fb2-40b9-a903-665169048bc1"/>
+		<error-handler ref="global-error-handler" />
+	</flow>
+
+</mule>

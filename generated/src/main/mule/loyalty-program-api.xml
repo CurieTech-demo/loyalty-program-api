@@ -97,7 +97,7 @@ VALUES (:customerId, :firstName, :lastName, :email, :phone, :enrollmentDate, :ti
 output application/json
 ---
 {
-	customerId: vars.customerId,
+	customerId: var.customerId,
 	message: "Customer successfully enrolled in loyalty program",
 	tier: vars.tier,
 	enrollmentDate: vars.enrollmentDate

@@ -37,5 +37,5 @@ jobs:
               "repo_name": "'"${GITHUB_REPOSITORY#*/}"'",
               "branch_name": "'"${{ github.head_ref || github.ref_name }}"'",
               "pr_number": ${{ github.event.pull_request.number }},
-              "prompt": "Perform Code review for this code according to the best practices" # you can change the prompt according to your wish
+              "prompt": "CI-triggered code review" # you can change the prompt according to your wish
             }'

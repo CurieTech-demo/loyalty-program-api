@@ -1,0 +1,10 @@
+http:
+  port: "8081"
+  host: "0.0.0.0"
+
+db:
+  host: "localhost"
+  port: "5432"
+  name: "loyalty_db"
+  user: "loyalty_user"
+  password: "loyalty_pass"

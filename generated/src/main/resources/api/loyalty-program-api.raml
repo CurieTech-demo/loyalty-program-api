@@ -1,0 +1,116 @@
+#%RAML 1.0
+title: Loyalty Program API
+version: v1
+baseUri: https://api.example.com/loyalty/{version}
+mediaType: application/json
+
+types:
+  EnrollmentRequest:
+    type: object
+    properties:
+      firstName:
+        type: string
+        required: true
+        minLength: 2
+        maxLength: 50
+      lastName:
+        type: string
+        required: true
+        minLength: 2
+        maxLength: 50
+      email:
+        type: string
+        required: true
+        pattern: "^\\S+@\\S+\\.\\S+$"
+      phone?:
+        type: string
+        pattern: "^\\+?[1-9]\\d{1,14}$"
+
+  EnrollmentResponse:
+    type: object
+    properties:
+      customerId:
+        type: string
+        required: true
+      message:
+        type: string
+        required: true
+      tier:
+        type: string
+        required: true
+        enum: [ Bronze, Silver, Gold ]
+      enrollmentDate:
+        type: datetime
+        required: true
+
+  ErrorResponse:
+    type: object
+    properties:
+      error:
+        type: string
+        required: true
+      message:
+        type: string
+        required: true
+      timestamp:
+        type: datetime
+        required: true
+
+/customers:
+  post:
+    description: Enroll a new customer in the loyalty program
+    body:
+      application/json:
+        type: EnrollmentRequest
+        example: |
+          {
+            "firstName": "John",
+            "lastName": "Doe",
+            "email": "john.doe@example.com",
+            "phone": "+12025551234"
+          }
+    responses:
+      201:
+        body:
+          application/json:
+            type: EnrollmentResponse
+            example: |
+              {
+                "customerId": "CUST-123e4567-e89b-12d3-a456-426614174000",
+                "message": "Customer successfully enrolled in loyalty program",
+                "tier": "Bronze",
+                "enrollmentDate": "2024-01-15T10:30:00Z"
+              }
+      400:
+        description: Invalid request data
+        body:
+          application/json:
+            type: ErrorResponse
+            example: |
+              {
+                "error": "BAD_REQUEST",
+                "message": "Invalid email format",
+                "timestamp": "2024-01-15T10:30:00Z"
+              }
+      409:
+        description: Customer already enrolled
+        body:
+          application/json:
+            type: ErrorResponse
+            example: |
+              {
+                "error": "CONFLICT",
+                "message": "Customer with this email already exists",
+                "timestamp": "2024-01-15T10:30:00Z"
+              }
+      500:
+        description: Internal server error
+        body:
+          application/json:
+            type: ErrorResponse
+            example: |
+              {
+                "error": "INTERNAL_ERROR",
+                "message": "An unexpected error occurred",
+                "timestamp": "2024-01-15T10:30:00Z"
+              }

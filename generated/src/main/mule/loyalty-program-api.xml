@@ -57,7 +57,7 @@
 					<raise-error type="LOYALTY:CUSTOMER_EXISTS" description="Customer with this email already enrolled" doc:name="Raise Duplicate Error" doc:id="201b3da2-d129-4cab-9102-09f4a85afaae"/>
 				</when>
 				<otherwise>
-					<logger level="INFO" message="Customer does not exist, proceeding with enrollment" doc:name="Log New Customer" doc:id="8dbb971c-b9fa-4b2f-a2d2-e9099c0eedf1"/>
+					<logger level="INFO" message="Customer does not exist, proceeding with enrollment." doc:name="Log New Customer" doc:id="8dbb971c-b9fa-4b2f-a2d2-e9099c0eedf1"/>
 				</otherwise>
 			</choice>
 			

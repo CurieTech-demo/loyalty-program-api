@@ -26,6 +26,19 @@ jobs:
       - uses: actions/checkout@v4
 
       # Runs a single command using the runners shell
+      # - name: Curie-review
+      #   run: |
+      #     curl -X POST "https://platform.curietech.ai/api/code-review/run" \
+      #       -H "Authorization: Bearer ${{ secrets.CURIE_API_KEY }}" \
+      #       -H "Content-Type: application/json" \
+      #       -d '{
+      #         "conn_type": "github",
+      #         "org_name": "CurieTech-demo", # provide your org name here
+      #         "repo_name": "'"${GITHUB_REPOSITORY#*/}"'",
+      #         "branch_name": "'"${{ github.head_ref || github.ref_name }}"'",
+      #         "pr_number": ${{ github.event.pull_request.number }},
+      #         "prompt": "CI-triggered code review" # you can change the prompt according to your wish
+      #       }'
       - name: Curie-review
         run: |
           curl -X POST "https://platform.curietech.ai/api/code-review/run" \
@@ -33,9 +46,9 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{
               "conn_type": "github",
-              "org_name": "CurieTech-demo", # provide your org name here
+              "org_name": "CurieTech-demo",
               "repo_name": "'"${GITHUB_REPOSITORY#*/}"'",
               "branch_name": "'"${{ github.head_ref || github.ref_name }}"'",
-              "pr_number": ${{ github.event.pull_request.number }},
-              "prompt": "CI-triggered code review" # you can change the prompt according to your wish
+              "pr_number": '${{ github.event.pull_request.number }}',
+              "prompt": "CI-triggered code review"
             }'

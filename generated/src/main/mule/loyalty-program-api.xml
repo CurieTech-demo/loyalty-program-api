@@ -65,7 +65,7 @@
 			<set-payload value="#[vars.enrollmentRequest]" doc:name="Restore Payload" doc:id="95579b73-59f7-4d68-aa60-fa94ea9019da"/>
 			
 			<!-- Prepare customer data with generated ID and timestamp -->
-			<set-variable variableName="customerId" value="#['CUST-' ++ uuid()]" doc:name="Generate Customer ID" doc:id="9dcd2a05-c741-4ba0-8147-652862885d2a"/>
+			
 			<set-variable variableName="enrollmentDate" value="#[now()]" doc:name="Set Enrollment Date" doc:id="0ac79dfa-44f1-45db-8f86-7ec9468cb57d"/>
 			<set-variable variableName="tier" value="Bronze" doc:name="Set Default Tier" doc:id="97a4bbe6-6f42-4fcb-9a81-f1972c61017b"/>
 			<set-variable variableName="totalPoints" value="#[0]" doc:name="Set Initial Points" doc:id="01030e34-6af6-4168-abc1-2886aad38323"/>

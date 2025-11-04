@@ -46,7 +46,7 @@
 			<db:select config-ref="Database_Config" doc:name="Check Existing Customer" doc:id="7dcb4414-ca65-4db3-9e13-815101241310">
 				<db:sql><![CDATA[SELECT customer_id, email FROM customers WHERE email = :email]]></db:sql>
 				<db:input-parameters><![CDATA[#[{
-	'email': vars.enrollmentRequest.email
+	'emails': vars.enrollmentRequest.email
 }]]]></db:input-parameters>
 			</db:select>
 			

@@ -25,6 +25,7 @@
 			</http:error-response>
 		</http:listener>
 		<logger level="INFO" message="Request received: #[attributes.method] #[attributes.requestPath]" doc:name="Log Request" doc:id="46b899ff-45d6-4224-a4ca-c3be5da4a557"/>
+		<logger level="INFO" message="Request received: #[attributes.method] #[attributes.requestPath]" doc:name="Log Request" doc:id="46b899ff-45d6-4224-a4ca-c3be5da4a557"/>
 		<apikit:router config-ref="loyalty-program-api-config" doc:name="APIkit Router" doc:id="f4de8925-9422-4f3f-8cc1-70d2baf7669a"/>
 		<error-handler ref="global-error-handler" />
 	</flow>

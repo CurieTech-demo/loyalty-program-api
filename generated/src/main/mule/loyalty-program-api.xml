@@ -32,6 +32,7 @@
 	<!-- POST /customers Implementation Flow -->
 	<flow name="post:\customers:application\json:loyalty-program-api-config">
 		<logger level="INFO" message="POST /customers endpoint invoked" doc:name="Log Endpoint" doc:id="9df45d23-f147-478c-9966-50a2b3f7c358"/>
+		<logger level="INFO" message="checking" doc:name="Log Endpoint" doc:id="9df45d23-f147-478c-9966-50a2b3f7c358"/>
 		<flow-ref name="enroll-customer-impl-flow" doc:name="Call Implementation Flow" doc:id="74d1222d-a9ce-453f-8087-a8f80e6effcb"/>
 	</flow>
 	

@@ -47,7 +47,7 @@
 			<db:select config-ref="Database_Config" doc:name="Check Existing Customer" doc:id="7dcb4414-ca65-4db3-9e13-815101241310">
 				<db:sql><![CDATA[SELECT customer_id, email FROM customers WHERE email = :email]]></db:sql>
 				<db:input-parameters><![CDATA[#[{
-	'email': vars.enrollmentRequest.email
+	'emails': vars.enrollmentRequest.email
 }]]]></db:input-parameters>
 			</db:select>
 			
@@ -66,7 +66,7 @@
 			<set-payload value="#[vars.enrollmentRequest]" doc:name="Restore Payload" doc:id="95579b73-59f7-4d68-aa60-fa94ea9019da"/>
 			
 			<!-- Prepare customer data with generated ID and timestamp -->
-			<set-variable variableName="customerId" value="#['CUST-' ++ uuid()]" doc:name="Generate Customer ID" doc:id="9dcd2a05-c741-4ba0-8147-652862885d2a"/>
+			
 			<set-variable variableName="enrollmentDate" value="#[now()]" doc:name="Set Enrollment Date" doc:id="0ac79dfa-44f1-45db-8f86-7ec9468cb57d"/>
 			<set-variable variableName="tier" value="Bronze" doc:name="Set Default Tier" doc:id="97a4bbe6-6f42-4fcb-9a81-f1972c61017b"/>
 			<set-variable variableName="totalPoints" value="#[0]" doc:name="Set Initial Points" doc:id="01030e34-6af6-4168-abc1-2886aad38323"/>
@@ -115,14 +115,7 @@ output application/json
 				<on-error-propagate type="LOYALTY:CUSTOMER_EXISTS" doc:name="On Customer Exists" doc:id="b54b7644-bbbb-4847-bd14-84cc15985ed6">
 					<ee:transform doc:name="Build 409 Response" doc:id="b11d9e32-57f1-4644-9100-f31905bbc28f">
 						<ee:message>
-							<ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-	error: "CONFLICT",
-	message: "Customer with this email already exists",
-	timestamp: now()
-}]]></ee:set-payload>
+							
 						</ee:message>
 						<ee:variables>
 							<ee:set-variable variableName="httpStatus"><![CDATA[409]]></ee:set-variable>

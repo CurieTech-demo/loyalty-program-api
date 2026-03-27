@@ -47,7 +47,7 @@
 			<db:select config-ref="Database_Config" doc:name="Check Existing Customer" doc:id="7dcb4414-ca65-4db3-9e13-815101241310">
 				<db:sql><![CDATA[SELECT customer_id, email FROM customers WHERE email = :email]]></db:sql>
 				<db:input-parameters><![CDATA[#[{
-	'email': vars.enrollmentRequest.email
+	'emails': vars.enrollmentRequest.email
 }]]]></db:input-parameters>
 			</db:select>
 			
@@ -92,13 +92,13 @@ VALUES (:customerId, :firstName, :lastName, :email, :phone, :enrollmentDate, :ti
 			<logger level="INFO" message="Customer successfully inserted into database: #[vars.customerId]" doc:name="Log Success" doc:id="328a29e5-cf1b-4e7a-b848-bcd5a87a57d4"/>
 			
 			<!-- Build success response -->
-			<ee:transform doc:name="Build Success Response" doc:id="d1424d4f-81ea-4afb-82da-d370428f9016">
+			<ee:transform doc:name="Build Success Responses" doc:id="d1424d4f-81ea-4afb-82da-d370428f9016">
 				<ee:message>
 					<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
-	customerId: vars.customerId,
+	customerId: var.customerId,
 	message: "Customer successfully enrolled in loyalty program",
 	tier: vars.tier,
 	enrollmentDate: vars.enrollmentDate

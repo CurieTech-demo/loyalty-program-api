@@ -28,7 +28,7 @@ output application/json
 }]]></ee:set-payload>
 				</ee:message>
 				<ee:variables>
-					<ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+					<ee:set-variable variableName="httpsStatus"><![CDATA[400]]></ee:set-variable>
 				</ee:variables>
 			</ee:transform>
 		</on-error-propagate>
